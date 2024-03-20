@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+<title>Map</title>
+<meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
+<script src="https://api.mapbox.com/mapbox-gl-js/v1.12.0/mapbox-gl.js"></script>
+<link href="https://api.mapbox.com/mapbox-gl-js/v1.12.0/mapbox-gl.css" rel="stylesheet" />
+<style>
+	body { margin: 0; padding: 0; }
+	#map { position: absolute; top: 150px; bottom: 0; width: 80%; }
+</style>
+</head>
+<body>
+  
+<style>
+.marker {
+display: block;
+border: none;
+border-radius: 50%;
+cursor: pointer;
+padding: 0;
+}
+.distance-container {
+		position: absolute;
+		top: 250px;
+		left: 20px;
+		z-index: 1;
+		}
+		 
+		.distance-container > * {
+		background-color: rgba(0, 0, 0, 0.5);
+		color: #fff;
+		font-size: 11px;
+		line-height: 18px;
+		display: block;
+		margin: 0;
+		padding: 5px 10px;
+		border-radius: 3px;
+		}
+</style>
+ 
+
+
+<div id="map" ></div>
+<div id="distance" class="distance-container" >
+	
+</div>
+<form action="/distancemap" method="POST" >
+  <label for="distance">Enter the Distance
+  </label>
+
+    <input
+    type="float"
+    id="distance"
+    name="distance"
+    placeholder="distance in Kms"
+    required
+    
+  />
+
+  </div>
+   
+  <button type="submit" class="btn">Submit</button>
+</form>
+<script src='https://unpkg.com/@turf/turf/turf.min.js'></script>
+<script>
+    var pdata=<%- JSON.stringify(x) %>;
+      //console.log(pdata);
+      let a= pdata;
+      const stores = a.map(store => {
+      return {
+        'type': 'Feature',
+        'properties': {
+'owner': store.owner,
+'address': store.address,
+'iconSize': [45, 45]
+},
+        geometry: {
+          'type': 'Point',
+          coordinates: [
+            store.longitude,
+            store.latitude
+          ]
+        },
+        'geometry': {
+'type': 'Point',
+'coordinates': [store.longitude,store.latitude]
+}
+      };
+    });
+    console.log(stores);
+    
+	mapboxgl.accessToken = 'pk.eyJ1Ijoic2Fsdmlua2FqYXIiLCJhIjoiY2tneGFxOW12MDF3YzMwcXY4MDUyejRxNiJ9.D8ztzrAlqEXiNzdTukE9tw';
+var geojson = {
+'type': 'FeatureCollection',
+'features': stores
+};
+ 
+var map = new mapboxgl.Map({
+container: 'map',
+style: 'mapbox://styles/mapbox/streets-v11',
+center: [72.8561,19.0222],
+zoom: 17
+});
+// map.on('load', function () {
+// map.addSource('route', {
+// 'type': 'geojson',
+// 'data': {
+// 'type': 'Feature',
+// 'properties': {},
+// 'geometry': {
+// 'type': 'LineString',
+// 'coordinates': [
+// [72.79244969999999,19.4103618],
+// [72.76422,19.38951]
+
+// ]
+// }
+// }
+// });
+// map.addLayer({
+// 'id': 'route',
+// 'type': 'line',
+// 'source': 'route',
+// 'layout': {
+// 'line-join': 'round',
+// 'line-cap': 'round'
+// },
+// 'paint': {
+// 'line-color': '#888',
+// 'line-width': 8
+// }
+// });
+// });
+// add markers to map
+geojson.features.forEach(function (marker) {
+// create a DOM element for the marker
+var el = document.createElement('div');
+el.className = 'marker';
+el.style.backgroundImage =
+'url("homeLogo.png")';
+el.style.width = marker.properties.iconSize[0] + 'px';
+el.style.height = marker.properties.iconSize[1] + 'px';
+ 
+el.addEventListener('click', function () {
+window.alert('owner: '+marker.properties.owner+' address: '+marker.properties.address);
+
+var from = turf.point([72.76422,19.38951]);
+var from = <%- JSON.stringify(uc) %>
+
+var to = turf.point(marker.geometry.coordinates);
+var options = {units: 'kilometers'};
+
+var distance = turf.distance(from, to, options);
+console.log(distance);
+var mapLayer = map.getLayer('route');
+
+    if(typeof mapLayer !== 'undefined') {
+      // Remove map layer & source.
+      map.removeLayer('route').removeSource('route');
+    }
+    map.addSource('route', {
+'type': 'geojson',
+'data': {
+'type': 'Feature',
+'properties': {},
+'geometry': {
+'type': 'LineString',
+'coordinates': [
+marker.geometry.coordinates,
+from.geometry.coordinates
+
+]
+}
+}
+});
+map.addLayer({
+'id': 'route',
+'type': 'line',
+'source': 'route',
+'layout': {
+'line-join': 'round',
+'line-cap': 'round'
+},
+'paint': {
+'line-color': '#888',
+'line-width': 8
+}
+});
+x=document.getElementById('distance');
+x.innerText=distance+'Kms';
+
+});
+ 
+// add marker to map
+new mapboxgl.Marker(el)
+.setLngLat(marker.geometry.coordinates)
+.addTo(map);
+});
+
+var cdata=<%- JSON.stringify(c) %>;
+      //console.log(pdata);
+      let c= cdata;
+      const nstores = c.map(nstore => {
+      return {
+        'type': 'Feature',
+        'properties': {
+'address': nstore.address,
+'name': nstore.college_name,
+'iconSize': [45, 45]
+},
+        geometry: {
+          'type': 'Point',
+          coordinates: [
+            nstore.longitude,
+            nstore.latitude
+          ]
+        },
+        'geometry': {
+'type': 'Point',
+'coordinates': [nstore.longitude,nstore.latitude]
+}
+      };
+    });
+    var geojson1 = {
+'type': 'FeatureCollection',
+'features': nstores
+};
+    geojson1.features.forEach(function (marker) {
+      
+// create a DOM element for the marker
+var el = document.createElement('div');
+el.className = 'marker';
+el.style.backgroundImage =
+'url("collegeicon.png")';
+el.style.width = marker.properties.iconSize[0] + 'px';
+el.style.height = marker.properties.iconSize[1] + 'px';
+ 
+el.addEventListener('click', function () {
+window.alert('name:'+marker.properties.name+' address: '+marker.properties.address);
+// map.removeLayer('route')
+// map.removeSource('route');
+var mapLayer = map.getLayer('route');
+
+    if(typeof mapLayer !== 'undefined') {
+      // Remove map layer & source.
+      map.removeLayer('route').removeSource('route');
+    }
+});
+ 
+// add marker to map
+new mapboxgl.Marker(el)
+.setLngLat(marker.geometry.coordinates)
+.addTo(map);
+});
+
+</script>
+ 
+</body>
+</html>
